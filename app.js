@@ -1,4 +1,4 @@
-/* Respirar v3.0 — Rodolfo Valle — no trackers, no accounts, no external libraries. */
+/* Respirar v3.1 — Rodolfo Valle — no trackers, no accounts, no external libraries. */
 (() => {
   'use strict';
   const root = document.getElementById('app');
@@ -12,7 +12,7 @@
     nowPlaying:$('nowPlaying'), audioHint:$('audioHint'), settings:$('settings'),
     settingsLabel:$('settingsLabel'), settingsToggle:$('settingsToggle'), announcer:$('announcer'),
     sessionMode:$('sessionMode'), sessionHeading:$('sessionHeading'),
-    bell:$('bellToggle'), motion:$('motionToggle'), volume:$('volume'), volumeValue:$('volumeValue'),
+    bell:$('bellToggle'), metronome:$('metronomeToggle'), motion:$('motionToggle'), volume:$('volume'), volumeValue:$('volumeValue'), audioStatus:$('audioStatus'),
     rhythmBlock:$('rhythmBlock')
   };
   const modeButtons = Array.from(root.querySelectorAll('[data-mode]'));
@@ -28,10 +28,11 @@
   const icons = {none:'◌',mar:'🌊',brisa:'🍃',lluvia:'🌧️',bosque:'🌿',cafeteria:'☕'};
   const circumference = 2*Math.PI*151;
   let state='idle', mode='guided', selectedSound='none', durationMinutes=5;
-  let inhaleMs=4000,exhaleMs=6000, accumulatedMs=0, startedAt=0;
+  let inhaleMs=3000,exhaleMs=4000, accumulatedMs=0, startedAt=0;
   let rAF=0, lastPhase='', lastTime='', immersive=false;
-  let bellOn=false,motionOn=!media.matches,volume=.30;
-  let ctx=null,active=null,audioToken=0;
+  let bellOn=false,metronomeOn=true,motionOn=!media.matches,volume=.30;
+  let ctx=null,active=null,audioToken=0,nextTick=0;
+  const tickVoices=new Set();
   const loaded=new Map();
   ui.progress.style.strokeDasharray=String(circumference);
   ui.progress.style.strokeDashoffset=String(circumference);
@@ -44,7 +45,11 @@
     return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
   };
   function announce(message){ui.announcer.textContent=message;}
-  function setHint(message){ui.audioHint.textContent=message;}
+  function setHint(message){
+    ui.audioHint.textContent=message;
+    ui.audioStatus.textContent=message;
+    ui.audioStatus.dataset.issue=/no pudo|bloqueó|sin audio|no ofrece/i.test(message)?'true':'false';
+  }
   function scrollStage(){if(matchMedia('(max-width:860px)').matches){
     root.querySelector('.session').scrollIntoView({block:'start',behavior:media.matches?'instant':'smooth'});
   }}
@@ -62,6 +67,9 @@
     ui.volumeValue.textContent=Math.round(volume*100)+'%';
     ui.sessionMode.textContent=mode==='guided'?'RESPIRACIÓN GUIADA':'SOLO AMBIENTES';
     ui.sessionHeading.textContent=mode==='guided'?'Tu espacio de calma':'Solo estar y escuchar';
+    ui.metronome.disabled=mode!=='guided';
+    ui.metronome.setAttribute('aria-pressed',String(metronomeOn));
+    ui.metronome.textContent=metronomeOn?'Sí':'No';
     ui.bell.disabled=mode!=='guided';
     ui.bell.setAttribute('aria-pressed',String(bellOn));ui.bell.textContent=bellOn?'Sí':'No';
     ui.motion.disabled=media.matches;ui.motion.setAttribute('aria-pressed',String(!media.matches&&motionOn));
@@ -72,7 +80,7 @@
       ?'<rect x="7" y="5" width="3.8" height="14" rx="1"/><rect x="13.2" y="5" width="3.8" height="14" rx="1"/>'
       :'<path d="M8 5.8c0-.7.8-1.1 1.4-.7l9.1 5.8a1.3 1.3 0 0 1 0 2.2l-9.1 5.8c-.6.4-1.4 0-1.4-.7V5.8Z"/>';
     ui.end.disabled=!active;
-    ui.nowPlaying.innerHTML=`<span aria-hidden="true">${icons[selectedSound]}</span> ${selectedSound==='none'?'Sin ambiente sonoro':names[selectedSound]+' · '+Math.round(volume*100)+'% de volumen'}`;
+    ui.nowPlaying.innerHTML=`<span aria-hidden="true">${icons[selectedSound]}</span> ${selectedSound==='none'?'Sin ambiente sonoro':names[selectedSound]+' · '+Math.round(volume*100)+'% de volumen'}`+(mode==='guided'&&metronomeOn?' · 🎵 Metrónomo 1 s':'');
   }
   function setImmersive(value){
     immersive=value;
@@ -147,7 +155,7 @@
     if(sound===selectedSound)return;
     selectedSound=sound;
     if(state==='running'){
-      if(sound==='none'){stopAudio(false);setHint('Ambiente silenciado.');}
+      if(sound==='none'){stopAudio(false);setHint('Ambiente silenciado; la guía y el metrónomo continúan.');}
       else startAmbience();
     }else{
       stopAudio(true);
@@ -170,9 +178,57 @@
       osc.onended=()=>{osc.disconnect();gain.disconnect();};
     }catch(_){}
   }
+  // Metrónomo: un pulso cada 1000 ms del mismo reloj que mueve la esfera.
+  // Se programan los próximos ~110 ms en AudioContext para evitar deriva por fotogramas.
+  // Al pausar, ocultar pestaña o finalizar se cancelan incluso los pulsos futuros.
+  function stopMetronome(){
+    for(const voice of tickVoices){
+      try{voice.osc.onended=null;voice.osc.stop();}catch(_){}
+      try{voice.osc.disconnect();voice.gain.disconnect();}catch(_){}
+    }
+    tickVoices.clear();
+  }
+  function resetMetronome(){
+    stopMetronome();
+    nextTick=Math.ceil((elapsed()+1)/1000);
+  }
+  function metronomeBeat(beatMs,when){
+    if(!ctx||ctx.state!=='running')return;
+    const cycle=inhaleMs+exhaleMs;
+    const pos=beatMs%cycle;
+    const inhaling=pos<inhaleMs;
+    const first=pos===0||pos===inhaleMs;
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.type='sine';
+    // La afinación distingue las fases; el primer pulso enfatiza el cambio.
+    osc.frequency.value=inhaling?520:390;
+    const peak=first?0.016:0.009;
+    gain.gain.setValueAtTime(.00001,when);
+    gain.gain.linearRampToValueAtTime(peak,when+.012);
+    gain.gain.exponentialRampToValueAtTime(.00001,when+.075);
+    osc.connect(gain);gain.connect(ctx.destination);
+    const voice={osc,gain};tickVoices.add(voice);
+    osc.onended=()=>{tickVoices.delete(voice);try{osc.disconnect();gain.disconnect();}catch(_){}};
+    osc.start(when);osc.stop(when+.085);
+  }
+  function scheduleMetronome(t){
+    if(!metronomeOn||mode!=='guided'||state!=='running'||document.hidden||!ctx||ctx.state!=='running')return;
+    // El primer pulso confirma el comienzo, incluso si el contexto de audio tardó en desbloquearse.
+    if(nextTick===0&&t<900){metronomeBeat(0,ctx.currentTime+.005);nextTick=1;}
+    if(nextTick*1000<t-100)nextTick=Math.ceil(t/1000);
+    const horizon=t+110;
+    while(nextTick*1000<=horizon){
+      const tickTime=nextTick*1000;
+      if(!hasDeadline()||tickTime<durationMs()){
+        metronomeBeat(tickTime,ctx.currentTime+Math.max(0,(tickTime-t)/1000));
+      }
+      nextTick++;
+    }
+  }
   function render(){
     const t=elapsed();
     if(state==='running'&&hasDeadline()&&t>=durationMs()){finish(true);return;}
+    scheduleMetronome(t);
     if(hasDeadline()){
       const time=format(durationMs()-Math.min(t,durationMs()));
       if(time!==lastTime){ui.time.textContent=time;lastTime=time;}
@@ -216,7 +272,7 @@
   function loop(){if(state!=='running')return;render();rAF=requestAnimationFrame(loop);}
   function pause(auto=false){
     if(state!=='running')return;
-    accumulatedMs=elapsed();state='paused';stopClock();stopAudio(true);lastPhase='';
+    accumulatedMs=elapsed();state='paused';stopClock();stopAudio(true);stopMetronome();lastPhase='';
     setHint(auto?'La pestaña quedó oculta: el sonido y la sesión se pausaron.':'Sonido pausado.');
     syncButtons();render();announce(auto?'Sesión pausada al cambiar de pestaña.':'Sesión en pausa.');
   }
@@ -224,15 +280,15 @@
     if(state!=='running'&&state!=='paused')return;
     if(state==='running')accumulatedMs=elapsed();
     if(natural&&hasDeadline())accumulatedMs=durationMs();
-    state='completed';stopClock();stopAudio(!natural);lastPhase='';
+    state='completed';stopClock();stopAudio(!natural);stopMetronome();lastPhase='';
     setImmersive(false);setHint('Sesión finalizada.');
     syncButtons();render();announce('Sesión finalizada. Puedes volver a tu respiración habitual.');
   }
   function start(){
-    if(state==='paused'){state='running';startedAt=performance.now();lastPhase='';initContext();startAmbience();syncButtons();stopClock();loop();announce('Sesión reanudada.');return;}
+    if(state==='paused'){state='running';startedAt=performance.now();lastPhase='';initContext();resetMetronome();startAmbience();syncButtons();stopClock();loop();announce('Sesión reanudada.');return;}
     accumulatedMs=0;lastTime='';lastPhase='';
     state='running';startedAt=performance.now();
-    initContext();startAmbience();setImmersive(true);syncButtons();stopClock();loop();
+    initContext();nextTick=0;stopMetronome();startAmbience();setImmersive(true);syncButtons();stopClock();loop();
     announce(mode==='guided'?'Respiración iniciada.':'Ambiente iniciado.');scrollStage();
   }
   function setMode(next){
@@ -240,7 +296,7 @@
     mode=next;state='idle';accumulatedMs=0;lastPhase='';lastTime='';
     if(mode==='guided'&&durationMinutes===0)durationMinutes=5;
     if(mode==='ambient'&&selectedSound==='none')selectedSound='mar';
-    stopAudio(true);setImmersive(false);
+    stopAudio(true);stopMetronome();setImmersive(false);
     setHint(mode==='ambient'?'Mar seleccionado. Comienza para escuchar.':'El ambiente sonoro es opcional.');
     syncButtons();render();
   }
@@ -262,6 +318,7 @@
     if(active&&ctx){const now=ctx.currentTime;active.gain.gain.cancelScheduledValues(now);active.gain.gain.setTargetAtTime(volume,now,.05);}
     syncButtons();
   });
+  ui.metronome.addEventListener('click',()=>{if(mode!=='guided')return;metronomeOn=!metronomeOn;if(metronomeOn){initContext();resetMetronome();}else stopMetronome();syncButtons();});
   ui.bell.addEventListener('click',()=>{if(mode!=='guided')return;bellOn=!bellOn;if(bellOn)initContext();syncButtons();});
   ui.motion.addEventListener('click',()=>{if(media.matches)return;motionOn=!motionOn;syncButtons();render();});
   ui.settingsToggle.addEventListener('click',()=>setImmersive(!immersive));
@@ -271,6 +328,6 @@
   if(media.addEventListener)media.addEventListener('change',handleReduce);
   else if(media.addListener)media.addListener(handleReduce);
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='running')pause(true);});
-  window.addEventListener('pagehide',()=>{if(state==='running')pause(true);else{stopAudio(true);stopClock();}});
+  window.addEventListener('pagehide',()=>{if(state==='running')pause(true);else{stopAudio(true);stopClock();stopMetronome();}});
   syncButtons();render();
 })();

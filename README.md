@@ -1,59 +1,42 @@
-# RESPIRAR v3.0 — Rodolfo Valle
+# RESPIRAR v3.1 — Rodolfo Valle
 
-Webapp estática de respiración guiada y ambientes sonoros en español chileno. Creada para publicación en **GitHub Pages**, sin dependencias de terceros ni backend.
+Aplicación psicoeducativa gratuita de respiración guiada y ambientes sonoros. Publicación estática en GitHub Pages con HTML/CSS/JavaScript, sin cuentas, formularios clínicos, analíticas, cookies propias ni dependencias de JavaScript externas.
 
-## Funciones
+Sitio previsto: https://respirar.rodolfovalle.com/  
+Autor: https://rodolfovalle.com/
 
-- **Respirar:** ritmos cómodos de 3/4, 4/4 y 4/6 segundos (inhalar/exhalar), sin retención del aire.
-- **Solo escuchar:** paisajes sonoros sin indicaciones respiratorias, con temporizador de 1, 3, 5 o 10 minutos o sin límite.
-- Cinco ambientes propios: mar, brisa, lluvia, bosque y cafetería; silencio disponible.
-- Volumen, pausa, continuar, finalizar, campanillas opcionales, esfera accesible y modo inmersivo.
-- El audio se descarga de este sitio **solo cuando la persona comienza una sesión con sonido**, no al cargar la página.
-- `visibilitychange` pausa la sesión y **silencia inmediatamente** al ocultarse la pestaña; se reanuda manualmente.
-- Sin cookies propias, localStorage, registro de sesiones, analíticas, cuentas ni integraciones externas.
+## Funciones de v3.1
 
-## Instalación rápida en GitHub Pages
+- Guía respiratoria con ritmos **3 / 4 s (predeterminado)**, 4 / 4 s y 4 / 6 s; sin retenciones obligatorias.
+- **Metrónomo suave activado por defecto para el modo Respirar:** un pulso cada segundo del mismo ciclo que utiliza la esfera. Los tonos distinguen inhalación y exhalación, con un pequeño acento al cambiar de fase. Se puede silenciar en cualquier momento desde *Mostrar ajustes*.
+- Campanillas de transición independientes, desactivadas por defecto.
+- Modo *Solo escuchar* sin instrucciones respiratorias y sin metrónomo, con temporizador o sin límite.
+- Sonidos locales sintéticos de mar, brisa, lluvia, bosque y cafetería, además de silencio. MP3 recodificados desde los WAV maestros a **112 kb/s mono** para reducir artefactos de compresión; no son grabaciones reales.
+- Contador, pausa, continuar, terminar, transición del sonido ambiental, volumen y animación opcional.
+- Estado de audio visible también durante la sesión inmersiva: preparación, reproducción, pausa y fallos de reproducción.
+- Ajustes de contraste de texto y reducción de la altura en móvil para que el botón de inicio aparezca en una pantalla emulada de 390 × 844.
+- Respetar `prefers-reduced-motion`; detener sonido y metrónomo al ocultar pestaña. No inicia reproducción hasta que la persona pulsa Comenzar.
 
-1. Crea un **repositorio público** nuevo, por ejemplo `respirar`, en tu cuenta de GitHub.
-2. Descomprime el ZIP de publicación. En el repositorio, pulsa **Add file > Upload files** y arrastra los archivos **y la carpeta `assets`**, conservando su estructura. Verifica que `index.html` quede en la **raíz** y que los MP3 estén en `assets/audio/`.
-3. Confirma la subida/commit.
-4. En el repositorio entra a **Settings > Pages > Build and deployment** y selecciona `Deploy from a branch`, rama `main`, carpeta `/(root)`. Guarda.
-5. En **Settings > Pages > Custom domain** configura `respirar.rodolfovalle.com`.
-6. En el proveedor DNS de `rodolfovalle.com`, crea el registro `CNAME` de host `respirar` apuntando a **`TU_USUARIO.github.io`** (sin `/respirar` ni `https://`). **No inventes el nombre de usuario**; usa exactamente el propietario real del repositorio.
-7. Tras la validación DNS y expedición del certificado, activa `Enforce HTTPS` cuando esté disponible. Comprueba la web real en Safari iOS y Chrome.
+## Privacidad
 
-El archivo `CNAME` del ZIP ya contiene el subdominio recomendado. **No cambia el DNS por sí solo**. La URL y metadatos SEO asumen que publicarás en ese subdominio: si eliges otro, modifica `index.html`, `CNAME`, `robots.txt` y `sitemap.xml`.
+La app no transmite respuestas personales ni guarda sesiones. Las peticiones normales al alojamiento GitHub Pages sí pueden generar registros técnicos del servidor. Los audios se solicitan a este mismo dominio cuando se inicia la sesión con ambiente seleccionado.
 
-GitHub Docs: https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site
+## Seguridad y límites
 
-## Publicación desde macOS, alternativamente
+Recurso de acompañamiento y educación; no equivale a tratamiento psicológico, atención de urgencia ni garantía de regulación emocional. No fuerces ni retengas la respiración; usa *Solo escuchar* si centrarte en respirar te incomoda. Detén el ejercicio si aparece mareo, angustia o malestar.
 
-Sube los archivos por GitHub web según los pasos previos. **No subas el ZIP como único archivo:** Pages necesita `index.html`, `app.js`, `styles.css` y los MP3 extraídos.
+## Publicación en GitHub Pages
 
-Para una prueba local con navegador, desde la carpeta descomprimida:
+Repositorio `rbvk/Respirar`, rama `main` y carpeta raíz. `CNAME` apunta a `respirar.rodolfovalle.com`. El DNS del host `respirar` debe apuntar mediante CNAME a `rbvk.github.io`. La presencia de `CNAME` no establece DNS ni habilita Pages: verifícalo en **Settings > Pages**. Para pruebas locales, ejecuta `python3 -m http.server 8000` en esta carpeta.
 
-```bash
-python3 -m http.server 8000
-```
+## Verificación
 
-Abre `http://localhost:8000/`. Abrir `index.html` con doble clic (`file://`) puede impedir la carga de audio por políticas de seguridad del navegador.
+- Código JS validado con `node --check`.
+- Pruebas automatizadas Chromium con HTML y CSS reales y MP3 reales para inicio, duración, ritmos, pulso por segundo, sincronización de 3/4, pausa, reanudación, interrupción y modo *Solo escuchar*.
+- Reproducción y decodificación MP3 de mar, botones de volumen y estado audio en modo inmersivo.
+- Pantallas emuladas a 1440, 390, 375 y 320 px sin desplazamiento horizontal; CTA visible sin desplazamiento a 390 × 844.
+- Movimiento reducido validado en Chromium.
+- Se corrigieron textos de contraste inferior a WCAG AA. No se declara que exista certificación completa WCAG ni pruebas con tecnología de asistencia física.
+- **No se ha podido ejecutar Safari en un iPhone físico**: falta la prueba en dispositivo antes de asegurar compatibilidad móvil real.
 
-## Licencias, procedencia del audio y privacidad
-
-Los cinco MP3 incluidos fueron **generados de forma original y procedural específicamente para esta versión**. No son grabaciones reales de olas, de un bosque o de personas conversando; tampoco son los MP3 de SFXMint utilizados mediante enlaces en la v2. No se atribuye falsamente procedencia CC0 a estos MP3.
-
-El generador original está disponible a solicitud (Python, NumPy, SciPy y SoundFile) y permite producir los cinco ambientes sin muestras de terceros. Los MP3 distribuidos son parte de este proyecto de Rodolfo Valle.
-
-La app no solicita información clínica ni almacena preferencias. Las solicitudes web normales sí son procesadas por **GitHub Pages** como servicio de alojamiento: no debe afirmarse que no se transmiten datos técnicos de navegación.
-
-**Advertencia:** recurso psicoeducativo, no tratamiento individualizado. Se recomienda respirar de manera natural y suspender en caso de mareos o aumento del malestar. La opción Solo escuchar no exige centrarse en la respiración.
-
-## Validación
-
-Pruebas automatizadas realizadas con Chromium en entorno controlado: inicio, fin, pausa, reanudación, cambio de ambiente, decodificación de los MP3 reales, volumen, modo sin límite, reducción de movimiento, ocultación de la pestaña, falla de audio, móvil 390 px, inexistencia de dependencias de terceros en el código. **Safari en dispositivo físico y GitHub Pages publicado siguen pendientes de pruebas**.
-
-© 2026 Rodolfo Valle · [rodolfovalle.com](https://rodolfovalle.com/)
-
-## Optimización de publicación (GitHub)
-
-Los cinco paisajes sonoros se codificaron a MP3 mono de 64 kb/s (a partir de los WAV originales) para reducir el peso de transferencia. Sus fuentes WAV originales se conservan en el paquete v3 disponible en esta conversación.
+© 2026 Rodolfo Valle. Los audios fueron sintetizados específicamente para Respirar; no son muestras de terceros.

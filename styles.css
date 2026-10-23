@@ -13,3 +13,41 @@ html{min-width:320px;scroll-behavior:smooth}body{margin:0;background:var(--bg);c
 @media(max-width:860px){.experience{grid-template-columns:1fr}.settings{max-width:none}.session{min-height:620px}.stage{height:310px}.site[data-immersive="true"] .session{min-height:650px}.intro{margin-top:32px}.site[data-immersive="true"] .experience{grid-template-columns:1fr}}
 @media(max-width:500px){.site{padding:0 13px}.sitebar{padding:16px 0}.identity{gap:8px}.monogram{width:38px;height:38px;border-radius:12px;font-size:.95rem}.identity-name strong{font-size:.67rem}.identity-name small{font-size:.51rem}.site-label{font-size:.55rem;padding:6px 7px;gap:5px}.intro{margin:29px auto 24px;padding:0 8px}.intro h1{font-size:clamp(2.28rem,11vw,3.4rem)}.intro p{font-size:.90rem}.session,.settings{border-radius:21px}.session{min-height:597px;padding:18px 16px 22px}.session-title{font-size:1rem}.eyebrow{font-size:.59rem}.text-button{padding:7px 9px;font-size:.71rem;gap:4px}.text-button svg{width:15px;height:15px}.stage{min-height:0;height:auto;aspect-ratio:1;max-width:330px;margin:10px auto 0}.guidance{font-size:.84rem;min-height:3em;margin-bottom:6px}.time{font-size:2.4rem}.action-row{margin-top:18px}.settings{padding:22px 18px;gap:21px}.below{padding:14px 15px}.footer{font-size:.67rem;justify-content:center;text-align:center;gap:9px 15px}.site[data-immersive="true"] .session{min-height:calc(100svh - 190px);max-height:none}.site[data-immersive="true"] .stage{max-width:345px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}.breath-orb{will-change:auto!important}}
+
+/* Respirar v3.1 — localised accessibilty and mobile start-above-fold improvements. */
+.audio-status{margin:3px 0 0;min-height:1.5em;max-width:420px;font-size:.78rem;line-height:1.45;text-align:center;color:#385d4f}
+.audio-status[data-issue="true"]{color:#8B382C;font-weight:700}
+.switch-help{display:block;font-size:.71rem;font-weight:450;line-height:1.4;color:#4D6558;padding-top:3px}
+/* Normal-text contrast on main light backgrounds: >=4.5:1 for corrected footer/caption cases. */
+.time-caption{color:#4D6355}
+.footer{color:#506558}
+.phase-seconds{color:#426551}
+.volume-line label,.volume-line output{color:#435f50}
+.helper,.settings-intro p{color:#4f6759}
+@media(max-width:500px){
+  .sitebar{padding:10px 0}
+  .intro{margin:14px auto 12px;padding:0 4px}
+  .intro h1{font-size:clamp(1.95rem,9vw,2.75rem);margin-bottom:7px;line-height:1.08}
+  .intro p{font-size:.81rem;line-height:1.44}
+  .overline{font-size:.58rem;margin-bottom:5px}
+  .session{padding:13px 14px 15px;min-height:0}
+  .session-title{font-size:.94rem;margin:3px 0 0}
+  .stage{height:clamp(185px,54vw,225px);aspect-ratio:auto;margin:2px auto 0;max-width:235px}
+  .stage-info{margin-top:0}
+  .guidance{font-size:.79rem;line-height:1.4;min-height:0;margin:0 0 4px}
+  .time{font-size:2rem}
+  .time-caption{margin-top:1px}
+  .action-row{margin-top:10px}
+  .primary,.secondary{min-height:46px}
+  .now-playing{margin:8px 0 0;min-height:0}
+  .audio-status{font-size:.74rem}
+  .site[data-immersive="true"] .session{min-height:0}
+  .site[data-immersive="true"] .stage{max-width:235px}
+}
+@media(max-width:360px){
+  .site{padding:0 9px}
+  .site-label{font-size:.49rem;padding:6px 5px}
+  .intro h1{font-size:1.93rem}
+  .stage{height:185px}
+  .session{padding:11px 12px 13px}
+}
