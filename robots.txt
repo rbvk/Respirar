@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://respirar.rodolfovalle.com/sitemap.xml
