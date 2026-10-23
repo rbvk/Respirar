@@ -1,4 +1,4 @@
-/* Respirar v3.1 — Rodolfo Valle — no trackers, no accounts, no external libraries. */
+/* Respirar v3.2 — Rodolfo Valle — no trackers, no accounts, no external libraries. */
 (() => {
   'use strict';
   const root = document.getElementById('app');
@@ -34,6 +34,13 @@
   let ctx=null,active=null,audioToken=0,nextTick=0;
   const tickVoices=new Set();
   const loaded=new Map();
+  let audioRest=0;
+  function suspendAudio(){
+    if(!ctx||ctx.state!=='running')return;
+    // Suspend only after the audio nodes have stopped; resume is always user-initiated.
+    if(audioRest)clearTimeout(audioRest);
+    audioRest=setTimeout(()=>{audioRest=0;if(state!=='running'&&ctx&&ctx.state==='running')ctx.suspend().catch(()=>{});},620);
+  }
   ui.progress.style.strokeDasharray=String(circumference);
   ui.progress.style.strokeDashoffset=String(circumference);
   const activeSession=()=>state==='running'||state==='paused';
@@ -111,6 +118,7 @@
     }
   }
   function initContext(){
+    if(audioRest){clearTimeout(audioRest);audioRest=0;}
     try{
       if(!ctx){const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)throw new Error('Sin Web Audio');ctx=new Ctx();}
       if(ctx.state==='suspended')ctx.resume().catch(()=>setHint('El navegador bloqueó el sonido. Puedes continuar sin audio.'));
@@ -244,7 +252,7 @@
       ui.guidance.textContent=state==='completed'
         ?'Vuelve cuando quieras. No hay nada que evaluar.'
         :mode==='guided'
-        ?'Busca una posición cómoda. Puedes mantener los ojos abiertos y respirar normalmente.'
+        ?'Puedes seguir el ritmo o respirar naturalmente. No necesitas hacerlo perfecto.'
         :'Elige un ambiente y escucha sin tener que seguir instrucciones.';
       ui.orb.style.setProperty('--orb-scale','.82');return;
     }
@@ -274,7 +282,7 @@
     if(state!=='running')return;
     accumulatedMs=elapsed();state='paused';stopClock();stopAudio(true);stopMetronome();lastPhase='';
     setHint(auto?'La pestaña quedó oculta: el sonido y la sesión se pausaron.':'Sonido pausado.');
-    syncButtons();render();announce(auto?'Sesión pausada al cambiar de pestaña.':'Sesión en pausa.');
+    syncButtons();render();suspendAudio();announce(auto?'Sesión pausada al cambiar de pestaña.':'Sesión en pausa.');
   }
   function finish(natural=false){
     if(state!=='running'&&state!=='paused')return;
@@ -282,7 +290,7 @@
     if(natural&&hasDeadline())accumulatedMs=durationMs();
     state='completed';stopClock();stopAudio(!natural);stopMetronome();lastPhase='';
     setImmersive(false);setHint('Sesión finalizada.');
-    syncButtons();render();announce('Sesión finalizada. Puedes volver a tu respiración habitual.');
+    syncButtons();render();suspendAudio();announce('Sesión finalizada. Puedes volver a tu respiración habitual.');
   }
   function start(){
     if(state==='paused'){state='running';startedAt=performance.now();lastPhase='';initContext();resetMetronome();startAmbience();syncButtons();stopClock();loop();announce('Sesión reanudada.');return;}
@@ -328,6 +336,10 @@
   if(media.addEventListener)media.addEventListener('change',handleReduce);
   else if(media.addListener)media.addListener(handleReduce);
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='running')pause(true);});
-  window.addEventListener('pagehide',()=>{if(state==='running')pause(true);else{stopAudio(true);stopClock();stopMetronome();}});
+  window.addEventListener('pagehide',()=>{if(state==='running')pause(true);else{stopAudio(true);stopClock();stopMetronome();suspendAudio();}});
+  // Instalable y offline: el trabajador de servicio nunca almacena respuestas ni sesiones.
+  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
   syncButtons();render();
 })();

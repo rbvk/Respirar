@@ -1,0 +1,26 @@
+{
+  "name": "Respirar · Rodolfo Valle",
+  "short_name": "Respirar",
+  "description": "Respiración guiada y ambientes sonoros, sin cuentas ni registro de sesiones.",
+  "lang": "es-CL",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f3",
+  "theme_color": "#275c4d",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
