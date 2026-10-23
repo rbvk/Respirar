@@ -1,5 +1,5 @@
-/* Respirar v4.0 — recursos públicos locales; no guarda sesiones ni datos clínicos */
-const CACHE='respirar-static-v4.0.0';
+/* Respirar v4.1 — recursos públicos locales; no guarda sesiones ni datos clínicos */
+const CACHE='respirar-static-v4.1.0';
 const BASE=new URL('./',self.registration.scope);
 const LOCAL=['./','./index.html','./privacidad.html','./styles.css','./app.js','./manifest.webmanifest','./assets/favicon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/social-card.png','./assets/audio/mar.mp3','./assets/audio/brisa.mp3','./assets/audio/lluvia.mp3','./assets/audio/bosque.mp3','./assets/audio/cafeteria.mp3','./assets/audio/rio.mp3','./assets/audio/fogata.mp3','./assets/audio/noche.mp3','./assets/audio/ventilador.mp3','./assets/audio/marron.mp3'];
 self.addEventListener('install',event=>{
@@ -15,8 +15,17 @@ self.addEventListener('fetch',event=>{
  event.respondWith((async()=>{
    const cache=await caches.open(CACHE);
    const cached=await cache.match(event.request,{ignoreSearch:true});
-   if(cached)return cached;
-   try{return await fetch(event.request);}catch(error){
+   // Con conexión, obtener HTML/JS/CSS recientes. Evita que los presets y el metrónomo
+   // queden ligados indefinidamente a una versión antigua por el caché offline.
+   const core=url.pathname.endsWith('/app.js')||url.pathname.endsWith('/styles.css')||url.pathname.endsWith('/index.html');
+   const freshFirst=event.request.mode==='navigate'||core;
+   if(!freshFirst && cached)return cached;
+   try{
+     const response=await fetch(event.request);
+     if(response.ok)event.waitUntil(cache.put(event.request,response.clone()));
+     return response;
+   }catch(error){
+     if(cached)return cached;
      if(event.request.mode==='navigate')return await cache.match(new URL('./index.html',BASE).href) || Response.error();
      return Response.error();
    }

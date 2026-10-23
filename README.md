@@ -1,4 +1,4 @@
-# RESPIRAR v4.0 · Rodolfo Valle
+# RESPIRAR v4.1 · Rodolfo Valle
 
 Webapp gratuita de respiración guiada y ambientes sonoros. Alojamiento estático en GitHub Pages, sin cuentas, formularios clínicos, trackers, anuncios ni almacenamiento de sesiones. **Creado por Rodolfo Valle.**
 
@@ -53,3 +53,10 @@ Documentación: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_app
 - La esfera permanece expandida durante la pausa tras inhalar y contraída durante la pausa tras exhalar. El metrónomo marca también los segundos de pausa con tono más discreto.
 - Cinco pistas de audio sintetizadas añadidas localmente (río, fogata, noche, ventilador, ruido marrón), guardadas junto a los originales y precargadas para uso sin conexión por el trabajador de servicio.
 - En pausas voluntarias no se recomienda forzar la respiración ni soportar incomodidad; se mantiene «Solo escuchar».
+
+## Correcciones v4.1
+
+- Presets verificados; disponibles antes de comenzar y durante una pausa. Al cambiar con sesión pausada, la siguiente reanudación comienza un ciclo nuevo sin reiniciar el temporizador general.
+- **Respiración cuadrada animada**: un punto recorre cuatro lados siguiendo inhalación -> pausa con aire -> exhalación -> pausa sin aire. La esfera y la cuenta regresiva se mantienen. Funciona con cuatro intervalos iguales mayores que 0, incluso personalizados.
+- Metrónomo más perceptible, con botón «▶ Probar» y recuperación si Web Audio tarda en activarse. El volumen general del dispositivo controla la audibilidad; el deslizador existente regula únicamente los ambientes.
+- Caché offline `respirar-static-v4.1.0`: HTML, JS y CSS priorizan red cuando está disponible, preservando respaldo offline y evitando desincronización de versiones. En PWA previamente instalada, puede ser necesario cerrarla y abrirla de nuevo para que el service worker antiguo permita actualizar la interfaz.

@@ -23,12 +23,12 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=4.1.0">
   <title>Respirar · Una pausa a tu ritmo | Rodolfo Valle</title>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication","@id":"https://respirar.rodolfovalle.com/#app","name":"Respirar","description":"Recurso psicoeducativo de respiración guiada y ambientes sonoros, sin cuentas ni registro de respuestas.","url":"https://respirar.rodolfovalle.com/","inLanguage":"es-CL","applicationCategory":"HealthApplication","operatingSystem":"Web","isAccessibleForFree":true,"author":{"@type":"Person","@id":"https://rodolfovalle.com/#sobre-mi","name":"Rodolfo Valle","url":"https://rodolfovalle.com/"},"publisher":{"@type":"Person","name":"Rodolfo Valle","url":"https://rodolfovalle.com/"}}
   </script>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=4.1.0" defer></script>
 </head>
 <body>
   <div class="site" id="app" data-state="idle" data-mode="guided" data-immersive="false">
@@ -68,6 +68,11 @@
               <circle class="progress-track" cx="170" cy="170" r="151"/>
               <circle class="progress-line" id="progressLine" cx="170" cy="170" r="151"/>
             </svg>
+            <svg class="square-svg" viewBox="0 0 340 340" aria-hidden="true" focusable="false">
+              <path class="square-track" d="M31 31 H309 V309 H31 Z"/>
+              <path class="square-progress" id="squareProgress" d="M31 31 H309 V309 H31 Z"/>
+              <circle class="square-dot" id="squareDot" cx="31" cy="31" r="8"/>
+            </svg>
             <div class="breath-orb" id="orb" aria-hidden="true"><span class="orb-sheen"></span></div>
             <div class="stage-text" aria-hidden="true">
               <span class="phase" id="phase">A tu ritmo</span>
@@ -77,6 +82,12 @@
             <div class="stage-ornament stage-ornament-2" aria-hidden="true"></div>
           </div>
 
+          <div class="square-guide" id="squareGuide" aria-label="Fases del recorrido cuadrado">
+            <span data-square-phase="inhale">🌿 Inhalar</span>
+            <span data-square-phase="holdIn">⏸️ Pausa</span>
+            <span data-square-phase="exhale">🍃 Exhalar</span>
+            <span data-square-phase="holdOut">⏸️ Pausa</span>
+          </div>
           <div class="stage-info">
             <p class="guidance" id="guidance">Puedes seguir el ritmo o respirar naturalmente. No necesitas hacerlo perfecto.</p>
             <div class="time" id="time" aria-label="Tiempo restante">05:00</div>
@@ -127,7 +138,7 @@
               <label class="breath-field"><span>⏸️ Pausa sin aire</span><span class="field-input"><input type="number" inputmode="numeric" id="holdOutSeconds" min="0" max="15" step="1" value="0" aria-label="Segundos de pausa después de exhalar"><span>s</span></span></label>
             </div>
             <p class="rhythm-recap" id="rhythmRecap" aria-live="polite">Ciclo de 7 segundos · Sin pausas</p>
-            <p class="helper">Las dos pausas son opcionales: usa <strong>0 s</strong> para omitirlas. No fuerces la respiración ni contengas el aire si resulta incómodo. Configura el ritmo antes de comenzar.</p>
+            <p class="helper">Las dos pausas son opcionales: usa <strong>0 s</strong> para omitirlas. No fuerces la respiración ni contengas el aire si resulta incómodo. Puedes cambiar el ritmo antes de comenzar o mientras la sesión esté pausada. El cuadrado avanza por sus cuatro lados al elegir tiempos iguales con ambas pausas activadas.</p>
           </fieldset>
           <fieldset class="setting-block sounds-block">
             <legend>Ambientes sonoros</legend>
@@ -150,7 +161,7 @@
           </fieldset>
           <details class="advanced-options"><summary>Más ajustes <span aria-hidden="true">⌄</span></summary>
           <div class="setting-block small-controls">
-            <div class="switch-line" id="metronomeLine"><span>Metrónomo suave <small class="switch-help">1 pulso por segundo en las cuatro fases, incluidas las pausas</small></span><button type="button" class="switch" id="metronomeToggle" aria-pressed="true" aria-label="Activar o desactivar metrónomo de un pulso por segundo">Sí</button></div>
+            <div class="switch-line" id="metronomeLine"><span>Metrónomo <small class="switch-help">1 pulso audible por segundo, incluidas las pausas · independiente del sonido ambiental</small></span><div class="switch-actions"><button type="button" class="preview-tone" id="metronomeTest" aria-label="Escuchar una prueba del metrónomo">▶ Probar</button><button type="button" class="switch" id="metronomeToggle" aria-pressed="true" aria-label="Activar o desactivar metrónomo de un pulso por segundo">Sí</button></div></div>
             <div class="switch-line"><span>Señales de cambio de fase</span><button type="button" class="switch" id="bellToggle" aria-label="Señales de cambio de fase" aria-pressed="false">No</button></div>
             <div class="switch-line"><span>Animación de la esfera</span><button type="button" class="switch" id="motionToggle" aria-label="Animación de la esfera" aria-pressed="true">Sí</button></div>
           </div>
@@ -163,7 +174,7 @@
       </div>
     </main>
     <footer class="footer">
-      <div class="footer-brand"><strong>RESPIRAR</strong><span>Un recurso creado por <a href="https://rodolfovalle.com/#sobre-mi" rel="author">Rodolfo Valle</a> · © 2026 · v4.0</span></div>
+      <div class="footer-brand"><strong>RESPIRAR</strong><span>Un recurso creado por <a href="https://rodolfovalle.com/#sobre-mi" rel="author">Rodolfo Valle</a> · © 2026 · v4.1</span></div>
       <nav class="footer-links" aria-label="Enlaces del recurso"><a href="https://rodolfovalle.com/#atlas">Atlas de emociones</a><a href="https://rodolfovalle.com/">Rodolfo Valle</a><a href="privacidad.html">Privacidad</a></nav>
       <details class="install-help"><summary>Instalar y usar sin conexión</summary><p>En iPhone: abre esta página en Safari, toca Compartir y selecciona «Añadir a pantalla de inicio». En Android o computador: utiliza «Instalar aplicación» o «Añadir a pantalla de inicio» desde el menú del navegador. Después de cargar todos los recursos por primera vez, podrás utilizar Respirar sin conexión. Si borras los datos del sitio, deberás volver a cargarlo.</p></details>
     </footer>

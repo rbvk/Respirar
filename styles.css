@@ -107,3 +107,31 @@ html{min-width:320px;scroll-behavior:smooth}body{margin:0;background:var(--bg);c
 .rhythm-recap{margin:10px 0 0;font-size:.76rem;font-weight:740;color:#32694D}
 .rhythm-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:360px){.breath-custom{gap:6px}.breath-field{padding:8px 7px}.breath-field>span:first-child{font-size:.72rem}}
+
+/* Respirar v4.1: recorrido cuadrado continuo y controles de sonido verificables. */
+.square-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;display:none;overflow:visible}
+.square-track,.square-progress{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.square-track{stroke:#BCD5C4;stroke-width:5;opacity:.8}
+.square-progress{stroke:#2D7D5E;stroke-width:6;stroke-dasharray:1112;stroke-dashoffset:1112;filter:drop-shadow(0 0 2px rgba(37,117,82,.20))}
+.square-dot{fill:#287454;stroke:#F7FBF6;stroke-width:3;filter:drop-shadow(0 2px 4px rgba(38,84,52,.28))}
+.site[data-square="true"] .square-svg{display:block}
+.site[data-square="true"] .progress-svg{display:none}
+.site[data-square="true"] .stage-ornament{display:none}
+.site[data-square="true"] .stage-glow{opacity:.55}
+.site[data-square="true"] .stage-text{z-index:3}
+.square-guide{display:none;flex-wrap:wrap;justify-content:center;gap:6px;max-width:95%;margin:0 auto 13px}
+.site[data-square="true"] .square-guide{display:flex}
+.square-guide span{display:inline-flex;align-items:center;justify-content:center;border:1px solid #DCE9DE;background:#F6F9F4;color:#62796A;border-radius:999px;padding:5px 9px;font-size:.7rem;font-weight:680;white-space:nowrap}
+.square-guide span[data-current="true"]{border-color:#68A582;background:#E2F1E7;color:#205740;box-shadow:0 0 0 1px #94C4A0 inset}
+.switch-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.preview-tone{background:#F3F8F1;border:1px solid #C9DED0;color:#275E48;border-radius:999px;padding:7px 10px;font-size:.73rem;font-weight:750;white-space:nowrap;min-height:34px}
+.preview-tone:hover:not(:disabled){background:#DDEEE2}
+.preview-tone:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:380px){.square-guide{gap:4px}.square-guide span{font-size:.62rem;padding:4px 6px}.switch-actions{gap:4px}.preview-tone{padding:6px 7px}}
+/* El trazado del cuadrado se amplía en pantallas pequeñas para seguirlo sin esfuerzo. */
+@media(max-width:500px){
+  .site[data-square="true"] .stage{
+    width:min(100%,295px);max-width:295px;height:auto;min-height:0;aspect-ratio:1;
+    margin:6px auto 0;
+  }
+}
