@@ -1,4 +1,4 @@
-/* Respirar v3.2 — Rodolfo Valle — no trackers, no accounts, no external libraries. */
+/* Respirar v4.0 — Rodolfo Valle — no trackers, no accounts, no external libraries. */
 (() => {
   'use strict';
   const root = document.getElementById('app');
@@ -13,7 +13,7 @@
     settingsLabel:$('settingsLabel'), settingsToggle:$('settingsToggle'), announcer:$('announcer'),
     sessionMode:$('sessionMode'), sessionHeading:$('sessionHeading'),
     bell:$('bellToggle'), metronome:$('metronomeToggle'), motion:$('motionToggle'), volume:$('volume'), volumeValue:$('volumeValue'), audioStatus:$('audioStatus'),
-    rhythmBlock:$('rhythmBlock')
+    rhythmBlock:$('rhythmBlock'), rhythmRecap:$('rhythmRecap'), inhaleInput:$('inhaleSeconds'),holdInInput:$('holdInSeconds'),exhaleInput:$('exhaleSeconds'),holdOutInput:$('holdOutSeconds')
   };
   const modeButtons = Array.from(root.querySelectorAll('[data-mode]'));
   const durationButtons = Array.from(root.querySelectorAll('[data-duration]'));
@@ -22,13 +22,14 @@
   const media = window.matchMedia('(prefers-reduced-motion: reduce)');
   const audioFiles = Object.freeze({
     mar:'assets/audio/mar.mp3', brisa:'assets/audio/brisa.mp3', lluvia:'assets/audio/lluvia.mp3',
-    bosque:'assets/audio/bosque.mp3', cafeteria:'assets/audio/cafeteria.mp3'
+    bosque:'assets/audio/bosque.mp3', cafeteria:'assets/audio/cafeteria.mp3',
+    rio:'assets/audio/rio.mp3',fogata:'assets/audio/fogata.mp3',noche:'assets/audio/noche.mp3',ventilador:'assets/audio/ventilador.mp3',marron:'assets/audio/marron.mp3'
   });
-  const names = {none:'Silencio',mar:'Mar',brisa:'Brisa',lluvia:'Lluvia',bosque:'Bosque',cafeteria:'Cafetería'};
-  const icons = {none:'◌',mar:'🌊',brisa:'🍃',lluvia:'🌧️',bosque:'🌿',cafeteria:'☕'};
+  const names = {none:'Silencio',mar:'Mar',brisa:'Brisa',lluvia:'Lluvia',bosque:'Bosque',cafeteria:'Cafetería',rio:'Río',fogata:'Fogata',noche:'Noche',ventilador:'Ventilador',marron:'Ruido marrón'};
+  const icons = {none:'◌',mar:'🌊',brisa:'🍃',lluvia:'🌧️',bosque:'🌿',cafeteria:'☕',rio:'🏞️',fogata:'🔥',noche:'🌙',ventilador:'🌀',marron:'🎧'};
   const circumference = 2*Math.PI*151;
   let state='idle', mode='guided', selectedSound='none', durationMinutes=5;
-  let inhaleMs=3000,exhaleMs=4000, accumulatedMs=0, startedAt=0;
+  let inhaleMs=3000,holdInMs=0,exhaleMs=4000,holdOutMs=0, accumulatedMs=0, startedAt=0;
   let rAF=0, lastPhase='', lastTime='', immersive=false;
   let bellOn=false,metronomeOn=true,motionOn=!media.matches,volume=.30;
   let ctx=null,active=null,audioToken=0,nextTick=0;
@@ -47,6 +48,30 @@
   const hasDeadline=()=>durationMinutes!==0;
   const durationMs=()=>durationMinutes*60000;
   const elapsed=()=>accumulatedMs+(state==='running'?performance.now()-startedAt:0);
+  const phases=()=>[
+    {key:'inhale',label:'Inhala',length:inhaleMs,guidance:'Deja entrar el aire suavemente. Sin intentar llenarte por completo.',minScale:.75,maxScale:1},
+    {key:'holdIn',label:'Pausa con aire',length:holdInMs,guidance:'Solo si resulta cómodo. Si lo necesitas, respira con naturalidad.',minScale:1,maxScale:1},
+    {key:'exhale',label:'Exhala',length:exhaleMs,guidance:'Deja salir el aire sin empujar. Relaja los hombros.',minScale:1,maxScale:.75},
+    {key:'holdOut',label:'Pausa sin aire',length:holdOutMs,guidance:'No fuerces esta pausa. Puedes respirar en cualquier momento.',minScale:.75,maxScale:.75}
+  ].filter(x=>x.length>0);
+  const cycleMs=()=>inhaleMs+holdInMs+exhaleMs+holdOutMs;
+  function phaseAt(t){
+    let pos=((t%cycleMs())+cycleMs())%cycleMs();
+    for(const phase of phases()){
+      if(pos<phase.length)return {...phase,spent:pos};
+      pos-=phase.length;
+    }
+    return {...phases()[0],spent:0};
+  }
+  function updateRhythmInputs(){
+    ui.inhaleInput.value=String(inhaleMs/1000);
+    ui.holdInInput.value=String(holdInMs/1000);
+    ui.exhaleInput.value=String(exhaleMs/1000);
+    ui.holdOutInput.value=String(holdOutMs/1000);
+    const holds=holdInMs||holdOutMs;
+    ui.rhythmRecap.textContent=`Ciclo de ${cycleMs()/1000} segundos · ${holds?'Con pausas configuradas':'Sin pausas'}`;
+  }
+
   const format=(ms)=>{
     const sec=Math.ceil(Math.max(0,ms)/1000);
     return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
@@ -68,7 +93,9 @@
       b.setAttribute('aria-pressed',String(Number(b.dataset.duration)===durationMinutes));
       b.disabled=activeSession();
     });
-    rhythmButtons.forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.rhythm===`${inhaleMs/1000},${exhaleMs/1000}`));b.disabled=activeSession();});
+    rhythmButtons.forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.rhythm===`${inhaleMs/1000},${holdInMs/1000},${exhaleMs/1000},${holdOutMs/1000}`));b.disabled=activeSession();});
+    [ui.inhaleInput,ui.holdInInput,ui.exhaleInput,ui.holdOutInput].forEach(input=>input.disabled=activeSession());
+    updateRhythmInputs();
     soundButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sound===selectedSound)));
     ui.volume.disabled=selectedSound==='none';
     ui.volumeValue.textContent=Math.round(volume*100)+'%';
@@ -171,13 +198,13 @@
     }
     syncButtons();
   }
-  function chime(inhale){
+  function chime(phase){
     if(!bellOn||mode!=='guided')return;
     const context=initContext();if(!context||context.state!=='running')return;
     try{
       const now=context.currentTime;
       const osc=context.createOscillator(),gain=context.createGain();
-      osc.type='sine';osc.frequency.value=inhale?410:330;
+      osc.type='sine';osc.frequency.value=({inhale:410,holdIn:460,exhale:330,holdOut:290})[phase]||330;
       gain.gain.setValueAtTime(.00001,now);
       gain.gain.exponentialRampToValueAtTime(.013,now+.04);
       gain.gain.exponentialRampToValueAtTime(.00001,now+.26);
@@ -202,15 +229,14 @@
   }
   function metronomeBeat(beatMs,when){
     if(!ctx||ctx.state!=='running')return;
-    const cycle=inhaleMs+exhaleMs;
-    const pos=beatMs%cycle;
-    const inhaling=pos<inhaleMs;
-    const first=pos===0||pos===inhaleMs;
+    const phase=phaseAt(beatMs);
+    const first=phase.spent===0;
+    const inhaling=phase.key==='inhale';
     const osc=ctx.createOscillator(),gain=ctx.createGain();
     osc.type='sine';
     // La afinación distingue las fases; el primer pulso enfatiza el cambio.
-    osc.frequency.value=inhaling?520:390;
-    const peak=first?0.016:0.009;
+    osc.frequency.value=({inhale:520,holdIn:460,exhale:390,holdOut:310})[phase.key];
+    const peak=first?0.016:(phase.key.startsWith('hold')?.005:.009);
     gain.gain.setValueAtTime(.00001,when);
     gain.gain.linearRampToValueAtTime(peak,when+.012);
     gain.gain.exponentialRampToValueAtTime(.00001,when+.075);
@@ -261,20 +287,18 @@
       ui.guidance.textContent=state==='paused'?'Pausado. Continúa cuando quieras.':'No tienes que hacer nada. Puedes simplemente escuchar.';
       ui.orb.style.setProperty('--orb-scale','.86');return;
     }
-    const cycle=inhaleMs+exhaleMs;
-    const pos=t%cycle, inhaling=pos<inhaleMs;
-    const stageTime=inhaling?inhaleMs:exhaleMs;
-    const spent=inhaling?pos:pos-inhaleMs;
-    const phase=inhaling?'inhale':'exhale';
-    ui.phase.textContent=inhaling?'Inhala':'Exhala';
-    ui.phaseSeconds.textContent=Math.ceil((stageTime-spent)/1000)+' s';
-    ui.guidance.textContent=state==='paused'?'Pausado. Continúa cuando te resulte cómodo.':
-      inhaling?'Deja entrar el aire suavemente. Sin intentar llenarte por completo.':
-      'Deja salir el aire, sin empujar. Relaja los hombros.';
-    if(state==='running'&&lastPhase!==phase){lastPhase=phase;announce(inhaling?'Inhala suavemente.':'Exhala suavemente.');chime(inhaling);}
-    const x=spent/stageTime;
+    const phase=phaseAt(t);
+    ui.phase.textContent=phase.label;
+    ui.phaseSeconds.textContent=Math.ceil((phase.length-phase.spent)/1000)+' s';
+    ui.guidance.textContent=state==='paused'?'Pausado. Continúa cuando te resulte cómodo.':phase.guidance;
+    if(state==='running'&&lastPhase!==phase.key){
+      lastPhase=phase.key;
+      announce(phase.label+'. '+phase.guidance);
+      chime(phase.key);
+    }
+    const x=phase.spent/phase.length;
     const sm=x*x*(3-2*x);
-    const scale=inhaling?.75+.25*sm:1-.25*sm;
+    const scale=phase.minScale+(phase.maxScale-phase.minScale)*sm;
     ui.orb.style.setProperty('--orb-scale',state==='running'&&motionOn&&!media.matches?String(scale):'.82');
   }
   function loop(){if(state!=='running')return;render();rAF=requestAnimationFrame(loop);}
@@ -317,9 +341,28 @@
   rhythmButtons.forEach(b=>b.addEventListener('click',()=>{
     if(activeSession())return;
     const vals=b.dataset.rhythm.split(',').map(Number);
-    inhaleMs=vals[0]*1000;exhaleMs=vals[1]*1000;
+    [inhaleMs,holdInMs,exhaleMs,holdOutMs]=vals.map(v=>v*1000);
     state='idle';accumulatedMs=0;lastPhase='';syncButtons();render();
   }));
+  const customFields=[ui.inhaleInput,ui.holdInInput,ui.exhaleInput,ui.holdOutInput];
+  const limits=[[1,15],[0,15],[1,15],[0,15]];
+  function setCustomRhythm(){
+    if(activeSession())return;
+    // Never commit an incomplete / invalid value while someone edits the number.
+    if(customFields.some((el,i)=>el.value.trim()===''||!Number.isInteger(Number(el.value))||Number(el.value)<limits[i][0]||Number(el.value)>limits[i][1]))return;
+    [inhaleMs,holdInMs,exhaleMs,holdOutMs]=customFields.map(el=>Number(el.value)*1000);
+    state='idle';accumulatedMs=0;lastPhase='';syncButtons();render();
+  }
+  customFields.forEach((field,i)=>{
+    field.addEventListener('input',setCustomRhythm);
+    field.addEventListener('change',()=>{
+      if(activeSession())return;
+      const numeric=Number(field.value);
+      const [min,max]=limits[i];
+      field.value=String(Number.isFinite(numeric)?Math.max(min,Math.min(max,Math.round(numeric))):min);
+      setCustomRhythm();
+    });
+  });
   soundButtons.forEach(b=>b.addEventListener('click',()=>changeSound(b.dataset.sound)));
   ui.volume.addEventListener('input',()=>{
     volume=Math.min(1,Math.max(0,Number(ui.volume.value)/100));

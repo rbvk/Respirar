@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Respirar">
-  <meta name="description" content="Respiración guiada y ambientes sonoros para una pausa a tu ritmo. Mar, brisa, lluvia, bosque y cafetería. Gratis, sin registro y sin enviar tus respuestas. Un recurso de Rodolfo Valle.">
+  <meta name="description" content="Respiración guiada y ambientes sonoros para una pausa a tu ritmo. Diez ambientes sonoros y tiempos respiratorios personalizables. Gratis, sin registro y sin enviar tus respuestas. Un recurso de Rodolfo Valle.">
   <meta name="author" content="Rodolfo Valle">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta property="og:type" content="website">
@@ -114,13 +114,20 @@
             </div>
           </fieldset>
           <fieldset class="setting-block" id="rhythmBlock">
-            <legend>Ritmo <small>inhalar / exhalar</small></legend>
-            <div class="rhythm-grid" role="group" aria-label="Ritmos sin retenciones">
-              <button type="button" class="rhythm-option" data-rhythm="3,4" aria-pressed="true"><strong>Suave</strong><small>3 / 4 s</small></button>
-              <button type="button" class="rhythm-option" data-rhythm="4,4" aria-pressed="false"><strong>Equilibrado</strong><small>4 / 4 s</small></button>
-              <button type="button" class="rhythm-option" data-rhythm="4,6" aria-pressed="false"><strong>Pausado</strong><small>4 / 6 s</small></button>
+            <legend>Ritmo respiratorio <small>segundos exactos por fase</small></legend>
+            <div class="rhythm-grid" role="group" aria-label="Ritmos sugeridos">
+              <button type="button" class="rhythm-option" data-rhythm="3,0,4,0" aria-pressed="true"><strong>Suave</strong><small>3 - 4</small></button>
+              <button type="button" class="rhythm-option" data-rhythm="4,0,6,0" aria-pressed="false"><strong>Pausado</strong><small>4 - 6</small></button>
+              <button type="button" class="rhythm-option" data-rhythm="4,4,4,4" aria-pressed="false"><strong>Cuadrado</strong><small>4 - 4 - 4 - 4</small></button>
             </div>
-            <p class="helper">La guía es orientativa: no necesitas forzar ni retener el aire. El ritmo inicial es 3 / 4 s; puedes cambiarlo antes de comenzar.</p>
+            <div class="breath-custom" role="group" aria-label="Configurar los cuatro tiempos de respiración">
+              <label class="breath-field"><span>🌿 Inhalar</span><span class="field-input"><input type="number" inputmode="numeric" id="inhaleSeconds" min="1" max="15" step="1" value="3" aria-label="Segundos de inhalación"><span>s</span></span></label>
+              <label class="breath-field"><span>⏸️ Pausa con aire</span><span class="field-input"><input type="number" inputmode="numeric" id="holdInSeconds" min="0" max="15" step="1" value="0" aria-label="Segundos de pausa después de inhalar"><span>s</span></span></label>
+              <label class="breath-field"><span>🍃 Exhalar</span><span class="field-input"><input type="number" inputmode="numeric" id="exhaleSeconds" min="1" max="15" step="1" value="4" aria-label="Segundos de exhalación"><span>s</span></span></label>
+              <label class="breath-field"><span>⏸️ Pausa sin aire</span><span class="field-input"><input type="number" inputmode="numeric" id="holdOutSeconds" min="0" max="15" step="1" value="0" aria-label="Segundos de pausa después de exhalar"><span>s</span></span></label>
+            </div>
+            <p class="rhythm-recap" id="rhythmRecap" aria-live="polite">Ciclo de 7 segundos · Sin pausas</p>
+            <p class="helper">Las dos pausas son opcionales: usa <strong>0 s</strong> para omitirlas. No fuerces la respiración ni contengas el aire si resulta incómodo. Configura el ritmo antes de comenzar.</p>
           </fieldset>
           <fieldset class="setting-block sounds-block">
             <legend>Ambientes sonoros</legend>
@@ -131,6 +138,11 @@
               <button class="sound-option" type="button" data-sound="lluvia" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🌧️</span><span>Lluvia</span></button>
               <button class="sound-option" type="button" data-sound="bosque" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🌿</span><span>Bosque</span></button>
               <button class="sound-option" type="button" data-sound="cafeteria" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">☕</span><span>Cafetería</span></button>
+              <button class="sound-option" type="button" data-sound="rio" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🏞️</span><span>Río</span></button>
+              <button class="sound-option" type="button" data-sound="fogata" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🔥</span><span>Fogata</span></button>
+              <button class="sound-option" type="button" data-sound="noche" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🌙</span><span>Noche</span></button>
+              <button class="sound-option" type="button" data-sound="ventilador" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🌀</span><span>Ventilador</span></button>
+              <button class="sound-option" type="button" data-sound="marron" aria-pressed="false"><span class="sound-emoji" aria-hidden="true">🎧</span><span>Ruido marrón</span></button>
             </div>
             <div class="volume-line"><label for="volume">Volumen</label><input type="range" id="volume" min="0" max="100" step="5" value="30" disabled><output for="volume" id="volumeValue">30%</output></div>
             <p class="helper audio-hint" id="audioHint">El sonido se reproduce solo cuando comienza la sesión.</p>
@@ -138,7 +150,7 @@
           </fieldset>
           <details class="advanced-options"><summary>Más ajustes <span aria-hidden="true">⌄</span></summary>
           <div class="setting-block small-controls">
-            <div class="switch-line" id="metronomeLine"><span>Metrónomo suave <small class="switch-help">1 pulso por segundo de inhalación o exhalación</small></span><button type="button" class="switch" id="metronomeToggle" aria-pressed="true" aria-label="Activar o desactivar metrónomo de un pulso por segundo">Sí</button></div>
+            <div class="switch-line" id="metronomeLine"><span>Metrónomo suave <small class="switch-help">1 pulso por segundo en las cuatro fases, incluidas las pausas</small></span><button type="button" class="switch" id="metronomeToggle" aria-pressed="true" aria-label="Activar o desactivar metrónomo de un pulso por segundo">Sí</button></div>
             <div class="switch-line"><span>Señales de cambio de fase</span><button type="button" class="switch" id="bellToggle" aria-label="Señales de cambio de fase" aria-pressed="false">No</button></div>
             <div class="switch-line"><span>Animación de la esfera</span><button type="button" class="switch" id="motionToggle" aria-label="Animación de la esfera" aria-pressed="true">Sí</button></div>
           </div>
@@ -151,7 +163,7 @@
       </div>
     </main>
     <footer class="footer">
-      <div class="footer-brand"><strong>RESPIRAR</strong><span>Un recurso creado por <a href="https://rodolfovalle.com/#sobre-mi" rel="author">Rodolfo Valle</a> · © 2026 · v3.2</span></div>
+      <div class="footer-brand"><strong>RESPIRAR</strong><span>Un recurso creado por <a href="https://rodolfovalle.com/#sobre-mi" rel="author">Rodolfo Valle</a> · © 2026 · v4.0</span></div>
       <nav class="footer-links" aria-label="Enlaces del recurso"><a href="https://rodolfovalle.com/#atlas">Atlas de emociones</a><a href="https://rodolfovalle.com/">Rodolfo Valle</a><a href="privacidad.html">Privacidad</a></nav>
       <details class="install-help"><summary>Instalar y usar sin conexión</summary><p>En iPhone: abre esta página en Safari, toca Compartir y selecciona «Añadir a pantalla de inicio». En Android o computador: utiliza «Instalar aplicación» o «Añadir a pantalla de inicio» desde el menú del navegador. Después de cargar todos los recursos por primera vez, podrás utilizar Respirar sin conexión. Si borras los datos del sitio, deberás volver a cargarlo.</p></details>
     </footer>

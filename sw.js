@@ -1,7 +1,7 @@
-/* Respirar v3.2 — recursos públicos locales; no guarda sesiones ni datos clínicos */
-const CACHE='respirar-static-v3.2.0';
+/* Respirar v4.0 — recursos públicos locales; no guarda sesiones ni datos clínicos */
+const CACHE='respirar-static-v4.0.0';
 const BASE=new URL('./',self.registration.scope);
-const LOCAL=['./','./index.html','./privacidad.html','./styles.css','./app.js','./manifest.webmanifest','./assets/favicon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/social-card.png','./assets/audio/mar.mp3','./assets/audio/brisa.mp3','./assets/audio/lluvia.mp3','./assets/audio/bosque.mp3','./assets/audio/cafeteria.mp3'];
+const LOCAL=['./','./index.html','./privacidad.html','./styles.css','./app.js','./manifest.webmanifest','./assets/favicon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/social-card.png','./assets/audio/mar.mp3','./assets/audio/brisa.mp3','./assets/audio/lluvia.mp3','./assets/audio/bosque.mp3','./assets/audio/cafeteria.mp3','./assets/audio/rio.mp3','./assets/audio/fogata.mp3','./assets/audio/noche.mp3','./assets/audio/ventilador.mp3','./assets/audio/marron.mp3'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(LOCAL.map(u=>new URL(u,BASE).href))).then(()=>self.skipWaiting()));
 });

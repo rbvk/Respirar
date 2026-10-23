@@ -1,7 +1,7 @@
 {
   "name": "Respirar · Rodolfo Valle",
   "short_name": "Respirar",
-  "description": "Respiración guiada y ambientes sonoros, sin cuentas ni registro de sesiones.",
+  "description": "Respiración configurable en cuatro fases y diez ambientes sonoros, sin cuentas ni registro de sesiones.",
   "lang": "es-CL",
   "id": "./",
   "start_url": "./",
